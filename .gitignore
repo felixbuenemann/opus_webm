@@ -1,0 +1,9 @@
+*.bundle
+*.gem
+*.so
+/tmp/
+/pkg/
+/vendor/
+mkmf.log
+Gemfile.lock
+Makefile
