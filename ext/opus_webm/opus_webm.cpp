@@ -245,5 +245,5 @@ static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
 
 extern "C" void Init_opus_webm(void) {
     VALUE mOpusWebm = rb_define_module("OpusWebm");
-    rb_define_singleton_method(mOpusWebm, "convert", opus_webm_convert, 2);
+    rb_define_private_method(rb_singleton_class(mOpusWebm), "_convert", opus_webm_convert, 2);
 }
