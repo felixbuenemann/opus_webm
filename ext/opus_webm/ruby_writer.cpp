@@ -9,7 +9,10 @@ RubyWriter::~RubyWriter() {
 
 int32_t RubyWriter::Write(const void* buffer, uint32_t length) {
     VALUE str = rb_str_new(static_cast<const char*>(buffer), length);
-    rb_funcall(io_, rb_intern("write"), 1, str);
+    VALUE result = rb_funcall(io_, rb_intern("write"), 1, str);
+    if (NIL_P(result)) {
+        return -1;
+    }
     position_ += length;
     return 0;
 }

@@ -1,3 +1,5 @@
+# include <unistd.h>
+# include <fcntl.h>
 # include <ruby/version.h>
 # include <ruby.h>
 # include <ruby/io.h>
@@ -8,7 +10,7 @@
 
 #define BUFFER_SIZE 4096
 
-// Function to parse the Opus packet duration (from ogg2webm.cpp)
+// Function to parse the Opus packet duration
 static int GetOpusPacketDuration(const uint8_t* data, size_t size) {
     if (size < 1) return -1;
 
@@ -47,19 +49,22 @@ static int GetOpusPacketDuration(const uint8_t* data, size_t size) {
 
 static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
     // Setup input
-    FILE* input_file = NULL;
+    int input_fd = -1;
     rb_io_t* input_fptr = NULL;
     bool input_is_io = false;
 
     if (RB_TYPE_P(input, T_STRING)) {
-        input_file = fopen(StringValueCStr(input), "rb");
-        if (!input_file) {
-            rb_raise(rb_eIOError, "Could not open input file");
+        input_fd = open(StringValueCStr(input), O_RDONLY);
+        if (input_fd < 0) {
+            rb_sys_fail("open");
         }
     } else {
-        GetOpenFile(input, input_fptr);
+        VALUE io = rb_io_check_io(input);
+        if (NIL_P(io)) {
+            rb_raise(rb_eTypeError, "expected IO object");
+        }
+        input_fd = NUM2INT(rb_funcall(io, rb_intern("fileno"), 0));
         input_is_io = true;
-        input_file = rb_io_stdio_file(input_fptr);
     }
 
     // Initialize Ogg structures
@@ -122,7 +127,10 @@ static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
     // Main processing loop
     while (!eos) {
         buffer = ogg_sync_buffer(&oy, BUFFER_SIZE);
-        bytes = fread(buffer, 1, BUFFER_SIZE, input_file);
+        bytes = read(input_fd, buffer, BUFFER_SIZE);
+        if (bytes < 0) {
+            rb_sys_fail("read");
+        }
         ogg_sync_wrote(&oy, bytes);
 
         while (ogg_sync_pageout(&oy, &og) == 1) {
@@ -237,7 +245,7 @@ static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
     ogg_sync_clear(&oy);
 
     if (!input_is_io) {
-        fclose(input_file);
+        close(input_fd);
     }
 
     return Qnil;
