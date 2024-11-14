@@ -169,25 +169,18 @@ static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
                     audio_track->set_seek_pre_roll(80000000ULL);
 
                 } else if (packet_count == 1) {
-                    // Process Comment Header
+                    // Process Comment Header but do not include it in CodecPrivate
                     comment_header_size = op.bytes;
                     comment_header = new unsigned char[comment_header_size];
                     memcpy(comment_header, op.packet, comment_header_size);
 
-                    // Combine headers for CodecPrivate
-                    size_t codec_private_size = id_header_size + comment_header_size;
-                    unsigned char *codec_private = new unsigned char[codec_private_size];
-                    memcpy(codec_private, id_header, id_header_size);
-                    memcpy(codec_private + id_header_size, comment_header, comment_header_size);
+                    // Set CodecPrivate to only include the id_header
+                    audio_track->SetCodecPrivate(id_header, id_header_size);
 
-                    audio_track->SetCodecPrivate(codec_private, codec_private_size);
-
-                    delete[] codec_private;
                     delete[] id_header;
                     delete[] comment_header;
                     id_header = nullptr;
                     comment_header = nullptr;
-
                 } else {
                     // Process audio packets
                     int packet_duration_samples = GetOpusPacketDuration(op.packet, op.bytes);
