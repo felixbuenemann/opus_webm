@@ -228,6 +228,10 @@ static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
         }
     }
 
+    // Set duration before finalizing
+    double duration_seconds = static_cast<double>(pts_samples) / sample_rate;
+    info->set_duration(duration_seconds * 1000.0);
+
     // Cleanup
     if (!segment.Finalize()) {
         rb_raise(rb_eRuntimeError, "Could not finalize segment");
