@@ -50,7 +50,6 @@ static int GetOpusPacketDuration(const uint8_t* data, size_t size) {
 static VALUE opus_webm_convert(VALUE self, VALUE input, VALUE output) {
     // Setup input
     int input_fd = -1;
-    rb_io_t* input_fptr = NULL;
     bool input_is_io = false;
 
     if (RB_TYPE_P(input, T_STRING)) {
