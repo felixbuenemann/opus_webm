@@ -4,6 +4,7 @@
 # include <ruby.h>
 # include <ruby/io.h>
 # include <ogg/ogg.h>
+# include <memory>
 # include <mkvmuxer/mkvmuxer.h>
 # include <mkvmuxer/mkvwriter.h>
 # include "ruby_writer.hpp"
